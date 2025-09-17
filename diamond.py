@@ -10,21 +10,20 @@ class DiamondDrawer(Node):
         super().__init__('diamond_drawer')
         self.pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
 
-        # Speeds
+        # Velocities
         self.linear_speed = 1.0
         self.angular_speed = 1.0
 
-        # Motion durations (precomputed)
-        self.edge_time = 2.0 / self.linear_speed         # edge length 2.0
-        self.turn_90_time = 1.5708 / self.angular_speed  # 90 degrees
-        self.turn_45_time = 0.7854 / self.angular_speed  # 45 degrees
+        # Times to move forward and turn
+        self.edge_time = 2.0
+        self.turn_90_time = 1.5708
+        self.turn_45_time = 0.7854
 
-        # State machine
-        self.phase = "init_turn"
+        # States
+        self.state = "init_turn"
         self.start_time = self.get_clock().now()
         self.edges_done = 0
 
-        # Check every 50 ms
         self.timer = self.create_timer(0.05, self.update)
 
     def update(self):
@@ -32,35 +31,34 @@ class DiamondDrawer(Node):
         elapsed = (now - self.start_time).nanoseconds / 1e9
         twist = Twist()
 
-        if self.phase == "init_turn":
+        if self.state == "init_turn":
             twist.angular.z = self.angular_speed
             if elapsed >= self.turn_45_time:
-                self.next_phase("forward")
+                self.next_state("forward")
 
-        elif self.phase == "forward":
+        elif self.state == "forward":
             twist.linear.x = self.linear_speed
             if elapsed >= self.edge_time:
-                self.next_phase("turn")
+                self.next_state("turn")
 
-        elif self.phase == "turn":
+        elif self.state == "turn":
             twist.angular.z = self.angular_speed
             if elapsed >= self.turn_90_time:
                 self.edges_done += 1
                 if self.edges_done < 4:
-                    self.next_phase("forward")
+                    self.next_state("forward")
                 else:
-                    self.next_phase("stop")
+                    self.next_state("stop")
 
-        elif self.phase == "stop":
-            self.pub.publish(Twist())  # ensure stop
-            self.get_logger().info("Completed one diamond — shutting down.")
+        elif self.state == "stop":
+            self.pub.publish(Twist())
             rclpy.shutdown()
             return
 
         self.pub.publish(twist)
 
-    def next_phase(self, new_phase):
-        self.phase = new_phase
+    def next_state(self, new_state):
+        self.state = new_state
         self.start_time = self.get_clock().now()
 
 

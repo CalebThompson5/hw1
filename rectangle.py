@@ -8,29 +8,27 @@ class RectangleDrawer(Node):
         super().__init__('rectangle_drawer')
         self.publisher = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
 
-        # Parameters
-        self.side_length = 2.0       # meters
-        self.linear_speed = 1.0      # m/s
-        self.angular_speed = 3.14159 / 2  # rad/s (90 deg/s turn)
+        # Velocities
+        self.side_length = 2.0
+        self.linear_speed = 1.0
+        self.angular_speed = 3.14159 / 2
 
         # Durations
-        self.forward_time = self.side_length / self.linear_speed
-        self.turn_time = (3.14159/ 2) / self.angular_speed
+        self.forward_time = 2.0
+        self.turn_time = 1.0
 
         # State
         self.start_time = self.get_clock().now()
         self.state = "forward"
         self.sides_completed = 0
 
-        # Timer
-        self.timer = self.create_timer(0.1, self.run_square)
+        self.timer = self.create_timer(0.05, self.update)
 
-    def run_square(self):
+    def update(self):
         elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds * 1e-9
         msg = Twist()
 
         if self.sides_completed >= 4:
-            # Finished the square
             self.get_logger().info("Square complete! Stopping.")
             msg.linear.x = 0.0
             msg.angular.z = 0.0
@@ -43,7 +41,6 @@ class RectangleDrawer(Node):
                 msg.linear.x = self.linear_speed
                 msg.angular.z = 0.0
             else:
-                # Transition to turning
                 self.state = "turn"
                 self.start_time = self.get_clock().now()
         elif self.state == "turn":
@@ -51,7 +48,6 @@ class RectangleDrawer(Node):
                 msg.linear.x = 0.0
                 msg.angular.z = self.angular_speed
             else:
-                # Transition back to forward
                 self.state = "forward"
                 self.start_time = self.get_clock().now()
                 self.sides_completed += 1

@@ -9,20 +9,19 @@ class TriangleDrawer(Node):
         super().__init__('triangle_drawer')
         self.pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
 
-        # Speeds
+        # Velocities
         self.linear_speed = 1.0
         self.angular_speed = 1.0
 
-        # Motion durations (precomputed, in seconds)
-        self.edge_time = 2.0 / self.linear_speed           # side length 2.0
-        self.turn_120_time = 2.0944 / self.angular_speed   # 120° in radians ≈ 2.0944
+        # Time to move forwad and turn
+        self.edge_time = 2.0
+        self.turn_120_time = 2.0944
 
-        # State machine
-        self.phase = "forward"
+        # States
+        self.state = "forward"
         self.start_time = self.get_clock().now()
         self.edges_done = 0
 
-        # Check every 50 ms
         self.timer = self.create_timer(0.05, self.update)
 
     def update(self):
@@ -30,30 +29,29 @@ class TriangleDrawer(Node):
         elapsed = (now - self.start_time).nanoseconds / 1e9
         twist = Twist()
 
-        if self.phase == "forward":
+        if self.state == "forward":
             twist.linear.x = self.linear_speed
             if elapsed >= self.edge_time:
-                self.next_phase("turn")
+                self.next_state("turn")
 
-        elif self.phase == "turn":
+        elif self.state == "turn":
             twist.angular.z = self.angular_speed
             if elapsed >= self.turn_120_time:
                 self.edges_done += 1
                 if self.edges_done < 3:
-                    self.next_phase("forward")
+                    self.next_state("forward")
                 else:
-                    self.next_phase("stop")
+                    self.next_state("stop")
 
-        elif self.phase == "stop":
-            self.pub.publish(Twist())  # ensure stop
-            self.get_logger().info("Completed one triangle — shutting down.")
+        elif self.state == "stop":
+            self.pub.publish(Twist())
             rclpy.shutdown()
             return
 
         self.pub.publish(twist)
 
-    def next_phase(self, new_phase):
-        self.phase = new_phase
+    def next_state(self, new_state):
+        self.state = new_state
         self.start_time = self.get_clock().now()
 
 
