@@ -36,7 +36,7 @@ class CircleDrawer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = CircleMover()
+    node = CircleDrawer()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
