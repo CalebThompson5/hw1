@@ -2,7 +2,6 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-import math
 
 class RectangleDrawer(Node):
     def __init__(self):
@@ -12,7 +11,7 @@ class RectangleDrawer(Node):
         # Parameters
         self.side_length = 2.0       # meters
         self.linear_speed = 1.0      # m/s
-        self.angular_speed = math.pi / 2  # rad/s (90 deg/s turn)
+        self.angular_speed = 3.14159 / 2  # rad/s (90 deg/s turn)
 
         # Durations
         self.forward_time = self.side_length / self.linear_speed
