@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist
 
 class CircleMover(Node):
     def __init__(self):
-        super().__init__('circle_mover')
+        super().__init__('circle_drawer')
 
         # Publisher to command the turtle's velocity
         self.publisher = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)

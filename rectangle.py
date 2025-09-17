@@ -6,7 +6,7 @@ import math
 
 class RectangleDrawer(Node):
     def __init__(self):
-        super().__init__('square_once')
+        super().__init__('rectangle_drawer')
         self.publisher = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
 
         # Parameters
